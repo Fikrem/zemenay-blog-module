@@ -18,16 +18,14 @@ export default function SignInPage() {
       console.error('Sign-in error:', error);
     } else {
       console.log('Sign-in success - waiting for session sync...');
-      // onAuthStateChange fires when the cookie is set on the client
-   const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
-  console.log('Auth state changed:', event, session);
-  if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
-    console.log('Redirecting to /admin because session is present.');
-    window.location.href = '/admin';
-  }
-});
+      const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+        console.log('Auth state changed:', event, session);
+        if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
+          console.log('Redirecting to /admin because session is present.');
+          window.location.href = '/admin';
+        }
+      });
 
-      // Clean up listener if user leaves the page
       return () => {
         listener.subscription.unsubscribe();
       };
@@ -35,30 +33,73 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-4">Sign In</h1>
-      <form onSubmit={handleSignIn} className="max-w-md">
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email"
-          className="border p-2 mb-2 w-full"
-          required
-        />
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
-          className="border p-2 mb-2 w-full"
-          required
-        />
-        <button type="submit" className="bg-blue-500 text-white p-2 rounded">
-          Sign In
-        </button>
-        {error && <p className="text-red-500 mt-2">{error}</p>}
-      </form>
-    </div>
+    <html className="h-full ">
+      <body className="h-full">
+        <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
+          <div className="sm:mx-auto sm:w-full sm:max-w-sm">
+         
+            <h2 className="mt-10 text-center text-2xl/9 font-bold tracking-tight text-white">
+              Sign in to your account
+            </h2>
+          </div>
+
+          <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
+            <form onSubmit={handleSignIn} className="space-y-6">
+              <div>
+                <label htmlFor="email" className="block text-sm/6 font-medium text-gray-100">
+                  Email address
+                </label>
+                <div className="mt-2">
+                  <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Email"
+                    required
+                    autoComplete="email"
+                    className="block w-full rounded-md bg-white/5 px-3 py-1.5 text-base text-white outline-1 -outline-offset-1 outline-white/10 placeholder:text-gray-500 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-500 sm:text-sm/6"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between">
+                  <label htmlFor="password" className="block text-sm/6 font-medium text-gray-100">
+                    Password
+                  </label>
+                  
+                </div>
+                <div className="mt-2">
+                  <input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Password"
+                    required
+                    autoComplete="current-password"
+                    className="block w-full rounded-md bg-white/5 px-3 py-1.5 text-base text-white outline-1 -outline-offset-1 outline-white/10 placeholder:text-gray-500 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-500 sm:text-sm/6"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <button
+                  type="submit"
+                  className="flex w-full justify-center rounded-md bg-indigo-500 px-3 py-1.5 text-sm/6 font-semibold text-white hover:bg-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+                >
+                  Sign in
+                </button>
+              </div>
+            </form>
+
+           
+
+            {error && <p className="text-red-500 text-center mt-4">{error}</p>}
+          </div>
+        </div>
+      </body>
+    </html>
   );
 }
