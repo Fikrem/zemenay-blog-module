@@ -18,16 +18,25 @@ export function BlogAdmin() {
   const [slug, setSlug] = useState('');
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const router = useRouter();
 
+  // Extract fetchPosts function so it can be reused
+  const fetchPosts = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('posts')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) {
+      console.error('Error fetching posts:', error);
+    } else {
+      setPosts(data || []);
+    }
+    setLoading(false);
+  };
+
   useEffect(() => {
-    const fetchPosts = async () => {
-      setLoading(true);
-      const { data, error } = await supabase.from('posts').select('*');
-      if (error) console.error('Error fetching posts:', error);
-      else setPosts(data || []);
-      setLoading(false);
-    };
     fetchPosts();
   }, []);
 
@@ -35,23 +44,45 @@ export function BlogAdmin() {
     e.preventDefault();
     if (!title || !content || !slug) return;
 
+    setSubmitting(true);
     const postData = { title, content, slug };
-    if (editingId) {
-      const { error } = await supabase
-        .from('posts')
-        .update(postData)
-        .eq('id', editingId);
-      if (error) console.error('Error updating post:', error);
-    } else {
-      const { error } = await supabase.from('posts').insert(postData);
-      if (error) console.error('Error creating post:', error);
-    }
+    
+    try {
+      if (editingId) {
+        const { error } = await supabase
+          .from('posts')
+          .update(postData)
+          .eq('id', editingId);
+        if (error) {
+          console.error('Error updating post:', error);
+          alert('Error updating post: ' + error.message);
+        } else {
+          alert('Post updated successfully!');
+        }
+      } else {
+        const { error } = await supabase.from('posts').insert(postData);
+        if (error) {
+          console.error('Error creating post:', error);
+          alert('Error creating post: ' + error.message);
+        } else {
+          alert('Post created successfully!');
+        }
+      }
 
-    setTitle('');
-    setContent('');
-    setSlug('');
-    setEditingId(null);
-    router.refresh();
+      // Reset form and refresh posts list
+      setTitle('');
+      setContent('');
+      setSlug('');
+      setEditingId(null);
+      
+      // Re-fetch posts to reflect changes
+      await fetchPosts();
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      alert('An unexpected error occurred');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleEdit = (post: Post) => {
@@ -62,9 +93,24 @@ export function BlogAdmin() {
   };
 
   const handleDelete = async (id: string) => {
-    const { error } = await supabase.from('posts').delete().eq('id', id);
-    if (error) console.error('Error deleting post:', error);
-    else router.refresh();
+    if (!confirm('Are you sure you want to delete this post?')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase.from('posts').delete().eq('id', id);
+      if (error) {
+        console.error('Error deleting post:', error);
+        alert('Error deleting post: ' + error.message);
+      } else {
+        alert('Post deleted successfully!');
+        // Re-fetch posts to reflect changes
+        await fetchPosts();
+      }
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      alert('An unexpected error occurred');
+    }
   };
 
   const handleSignOut = async () => {
@@ -77,7 +123,7 @@ export function BlogAdmin() {
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Blog Admin</h1>
+        <h1 className="text-3xl font-bold">Admin dashboard</h1>
         <button
           onClick={handleSignOut}
           className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
@@ -86,7 +132,7 @@ export function BlogAdmin() {
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="mb-6 bg-white shadow-md rounded p-4">
+      <form onSubmit={handleSubmit} className="mb-6 shadow-md rounded p-4">
         <h2 className="text-xl font-semibold mb-4">{editingId ? 'Edit Post' : 'Create New Post'}</h2>
         <input
           type="text"
@@ -95,6 +141,7 @@ export function BlogAdmin() {
           placeholder="Title"
           className="border p-2 mb-2 w-full"
           required
+          disabled={submitting}
         />
         <input
           type="text"
@@ -103,6 +150,7 @@ export function BlogAdmin() {
           placeholder="Slug (unique)"
           className="border p-2 mb-2 w-full"
           required
+          disabled={submitting}
         />
         <textarea
           value={content}
@@ -110,13 +158,15 @@ export function BlogAdmin() {
           placeholder="Content"
           className="border p-2 mb-2 w-full h-32"
           required
+          disabled={submitting}
         />
         <div className="flex gap-2">
           <button
             type="submit"
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
+            disabled={submitting}
           >
-            {editingId ? 'Update' : 'Create'} Post
+            {submitting ? 'Saving...' : (editingId ? 'Update' : 'Create')} Post
           </button>
           {editingId && (
             <button
@@ -128,6 +178,7 @@ export function BlogAdmin() {
                 setEditingId(null);
               }}
               className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+              disabled={submitting}
             >
               Cancel
             </button>
@@ -135,34 +186,41 @@ export function BlogAdmin() {
         </div>
       </form>
 
-      <h2 className="text-2xl font-semibold mb-2">Existing Posts</h2>
-      <ul className="space-y-4">
-        {posts.map((post) => (
-          <li
-            key={post.id}
-            className="p-4 bg-gray-100 rounded flex justify-between items-center"
-          >
-            <div>
-              <p className="font-semibold">{post.title}</p>
-              <p className="text-sm text-gray-600">Slug: {post.slug}</p>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => handleEdit(post)}
-                className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(post.id)}
-                className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-              >
-                Delete
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
+      <h2 className="text-2xl font-semibold mb-2">Existing Posts ({posts.length})</h2>
+      {posts.length === 0 ? (
+        <p className="text-gray-500 italic">No posts yet. Create your first post above!</p>
+      ) : (
+        <ul className="space-y-4">
+          {posts.map((post) => (
+            <li
+              key={post.id}
+              className="p-4 bg-gray-100 rounded flex justify-between items-center"
+            >
+              <div>
+                <p className="font-semibold">{post.title}</p>
+                <p className="text-sm text-gray-600">Slug: {post.slug}</p>
+                <p className="text-xs text-gray-500">
+                  Created: {new Date(post.created_at).toLocaleDateString()}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleEdit(post)}
+                  className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleDelete(post.id)}
+                  className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                >
+                  Delete
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
