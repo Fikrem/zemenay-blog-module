@@ -19,25 +19,68 @@ export function BlogAdmin() {
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<string>('Checking...');
   const router = useRouter();
+
+  // Test database connection
+  const testConnection = async () => {
+    try {
+      console.log('Testing Supabase connection...');
+      const { data, error } = await supabase.from('posts').select('count(*)', { count: 'exact' });
+      
+      if (error) {
+        console.error('Connection test error:', error);
+        setConnectionStatus(`❌ Database Error: ${error.message}`);
+        return false;
+      } else {
+        console.log('Connection test successful:', data);
+        setConnectionStatus('✅ Database Connected');
+        return true;
+      }
+    } catch (err) {
+      console.error('Connection test failed:', err);
+      setConnectionStatus(`❌ Connection Failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      return false;
+    }
+  };
 
   // Extract fetchPosts function so it can be reused
   const fetchPosts = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('posts')
-      .select('*')
-      .order('created_at', { ascending: false });
-    if (error) {
-      console.error('Error fetching posts:', error);
-    } else {
-      setPosts(data || []);
+    try {
+      console.log('Fetching posts...');
+      const { data, error } = await supabase
+        .from('posts')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      console.log('Fetch posts result:', { data, error });
+      
+      if (error) {
+        console.error('Error fetching posts:', error);
+        alert(`Error fetching posts: ${error.message}`);
+      } else {
+        console.log('Posts fetched successfully:', data);
+        setPosts(data || []);
+      }
+    } catch (err) {
+      console.error('Unexpected error fetching posts:', err);
+      alert('Unexpected error occurred while fetching posts');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
-    fetchPosts();
+    const initialize = async () => {
+      const isConnected = await testConnection();
+      if (isConnected) {
+        await fetchPosts();
+      } else {
+        setLoading(false);
+      }
+    };
+    initialize();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -48,23 +91,39 @@ export function BlogAdmin() {
     const postData = { title, content, slug };
     
     try {
+      console.log('Submitting post data:', postData);
+      
       if (editingId) {
-        const { error } = await supabase
+        console.log('Updating post with ID:', editingId);
+        const { data, error } = await supabase
           .from('posts')
           .update(postData)
-          .eq('id', editingId);
+          .eq('id', editingId)
+          .select(); // Add select to get the updated data
+        
+        console.log('Update result:', { data, error });
+        
         if (error) {
           console.error('Error updating post:', error);
           alert('Error updating post: ' + error.message);
         } else {
+          console.log('Post updated successfully:', data);
           alert('Post updated successfully!');
         }
       } else {
-        const { error } = await supabase.from('posts').insert(postData);
+        console.log('Creating new post');
+        const { data, error } = await supabase
+          .from('posts')
+          .insert(postData)
+          .select(); // Add select to get the inserted data
+        
+        console.log('Insert result:', { data, error });
+        
         if (error) {
           console.error('Error creating post:', error);
           alert('Error creating post: ' + error.message);
         } else {
+          console.log('Post created successfully:', data);
           alert('Post created successfully!');
         }
       }
@@ -98,11 +157,20 @@ export function BlogAdmin() {
     }
 
     try {
-      const { error } = await supabase.from('posts').delete().eq('id', id);
+      console.log('Deleting post with ID:', id);
+      const { data, error } = await supabase
+        .from('posts')
+        .delete()
+        .eq('id', id)
+        .select(); // Add select to get the deleted data
+      
+      console.log('Delete result:', { data, error });
+      
       if (error) {
         console.error('Error deleting post:', error);
         alert('Error deleting post: ' + error.message);
       } else {
+        console.log('Post deleted successfully:', data);
         alert('Post deleted successfully!');
         // Re-fetch posts to reflect changes
         await fetchPosts();
@@ -122,6 +190,11 @@ export function BlogAdmin() {
 
   return (
     <div className="container mx-auto p-4">
+      {/* Connection Status */}
+      <div className="mb-4 p-3 bg-gray-100 rounded">
+        <p className="text-sm font-medium">Database Status: {connectionStatus}</p>
+      </div>
+
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Admin dashboard</h1>
         <button
