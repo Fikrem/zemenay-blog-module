@@ -9,6 +9,8 @@ A modular blog system that plugs into any Next.js app in minutes. Uses Supabase 
 - Markdown with images and YouTube embeds
 - Cover image upload via Supabase Storage
 - Dark/Light theme toggle
+- Like/Dislike reactions per post (per user)
+- Comments with authenticated identity (email shown)
 - Next.js App Router compatible
 
 ## Quick Start
@@ -30,9 +32,10 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 
 3) Create database schema in Supabase
 
-Run this SQL in Supabase SQL editor:
+Run this SQL in Supabase SQL editor (or import `DB_SCHEMA.sql`):
 
 ```sql
+-- Posts table
 create table if not exists posts (
   id uuid primary key default gen_random_uuid(),
   title text not null,
@@ -44,16 +47,36 @@ create table if not exists posts (
   created_at timestamp with time zone default now()
 );
 
--- row level security
 alter table posts enable row level security;
+create policy if not exists "Public read posts" on posts for select using (true);
+create policy if not exists "Authenticated write posts" on posts for all to authenticated using (auth.uid() = author_id) with check (auth.uid() = author_id);
 
--- allow read for all
-create policy "Public read posts" on posts
-for select using (true);
+-- Reactions table
+create table if not exists post_reactions (
+  id uuid primary key default gen_random_uuid(),
+  post_id uuid not null references posts(id) on delete cascade,
+  user_id uuid not null,
+  reaction text not null check (reaction in ('like','dislike')),
+  created_at timestamp with time zone default now(),
+  unique (post_id, user_id)
+);
+alter table post_reactions enable row level security;
+create policy if not exists "Public read reactions" on post_reactions for select using (true);
+create policy if not exists "Users manage own reactions" on post_reactions for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
--- allow insert/update/delete for authenticated users
-create policy "Authenticated write posts" on posts
-for all to authenticated using (auth.uid() = author_id) with check (auth.uid() = author_id);
+-- Comments table
+create table if not exists comments (
+  id uuid primary key default gen_random_uuid(),
+  post_id uuid not null references posts(id) on delete cascade,
+  author_id uuid not null,
+  author_email text,
+  content text not null,
+  created_at timestamp with time zone default now()
+);
+alter table comments enable row level security;
+create policy if not exists "Public read comments" on comments for select using (true);
+create policy if not exists "Users create comments" on comments for insert to authenticated with check (auth.uid() = author_id);
+create policy if not exists "Users update/delete own comments" on comments for all to authenticated using (auth.uid() = author_id) with check (auth.uid() = author_id);
 ```
 
 4) Create Supabase Storage bucket (optional for images)
@@ -94,13 +117,13 @@ export const config = {
 - Add routes:
   - `/blog/[[...slug]]/page.tsx` renders `<BlogModule />`
   - `/admin/page.tsx` renders `<BlogAdmin />`
-  - `/auth/signin/page.tsx` provides sign-in form
+  - `/auth/signin/page.tsx` provides sign-in and sign-up form with redirect support
 
 - Create `src/lib/supabase.ts` using env values (see this repo’s file) and import `supabase` from it.
 
 ## API/Components
 
-- `BlogModule({ slug?: string[] })`: lists posts or renders a single post by slug. Uses Supabase `posts` table.
+- `BlogModule({ slug?: string[] })`: lists posts or renders a single post by slug. Includes like/dislike reactions and comments. Uses Supabase `posts`, `post_reactions`, `comments`.
 - `BlogAdmin()`: admin dashboard for CRUD on posts, image upload, and rich content editor; requires authenticated Supabase session.
 
 ## Integration with public website template
