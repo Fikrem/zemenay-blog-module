@@ -1,5 +1,10 @@
 import { BlogModule } from '@/components/BlogModule';
 
-export default function BlogPage({ params }: { params: { slug?: string[] } }) {
-  return <BlogModule slug={params.slug} />;
+type BlogParams = { slug?: string[] };
+
+type Props = { params?: BlogParams };
+
+export default function BlogPage(props: unknown) {
+  const { params } = (props as Props) ?? {};
+  return <BlogModule slug={params?.slug} />;
 }

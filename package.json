@@ -2,12 +2,26 @@
   "name": "zemenay-blog-module",
   "version": "0.1.0",
   "type": "module",
-  "private": true,
+  "private": false,
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "prepublishOnly": "npm run build:lib",
+    "build:lib": "tsc -p tsconfig.build.json"
   },
   "dependencies": {
     "@supabase/auth-helpers-nextjs": "^0.10.0",
@@ -29,6 +43,6 @@
     "eslint-config-next": "15.4.5",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.9.2"
   }
 }

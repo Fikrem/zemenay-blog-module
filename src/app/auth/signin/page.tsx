@@ -6,30 +6,56 @@ export default function SignInPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
+  const [redirect, setRedirect] = useState<string | null>(null);
 
-  const handleSignIn = async (e: React.FormEvent) => {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const m = params.get('mode');
+    const r = params.get('redirect');
+    if (m === 'signup') setMode('signup');
+    if (r) setRedirect(r);
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) {
-      setError(error.message);
-      console.error('Sign-in error:', error);
-    } else {
-      console.log('Sign-in success - waiting for session sync...');
-      const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
-        console.log('Auth state changed:', event, session);
-        if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
-          console.log('Redirecting to /admin because session is present.');
-          window.location.href = '/admin';
-        }
-      });
+    setError(null);
 
-      return () => {
-        listener.subscription.unsubscribe();
-      };
+    if (mode === 'signup') {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+      if (error) {
+        setError(error.message);
+        return;
+      }
+      // After sign-up, attempt sign-in
+      const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInErr) {
+        setError(signInErr.message);
+        return;
+      }
+    } else {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) {
+        setError(error.message);
+        return;
+      }
     }
+
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
+        window.location.href = redirect || '/admin';
+      }
+    });
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
   };
 
   return (
@@ -37,14 +63,14 @@ export default function SignInPage() {
       <body className="h-full ">
         <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8 bg-gray-800">
           <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-         
+            
             <h2 className="mt-10 text-center text-2xl/9 font-bold tracking-tight text-white">
-              Sign in to your account
+              {mode === 'signup' ? 'Create an account' : 'Sign in to your account'}
             </h2>
           </div>
 
           <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-            <form onSubmit={handleSignIn} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label htmlFor="email" className="block text-sm/6 font-medium text-gray-100">
                   Email address
@@ -68,7 +94,6 @@ export default function SignInPage() {
                   <label htmlFor="password" className="block text-sm/6 font-medium text-gray-100">
                     Password
                   </label>
-                  
                 </div>
                 <div className="mt-2">
                   <input
@@ -89,12 +114,22 @@ export default function SignInPage() {
                   type="submit"
                   className="flex w-full justify-center rounded-md bg-indigo-500 px-3 py-1.5 text-sm/6 font-semibold text-white hover:bg-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
                 >
-                  Sign in
+                  {mode === 'signup' ? 'Sign up' : 'Sign in'}
                 </button>
               </div>
             </form>
 
-           
+            <div className="mt-4 text-center text-sm text-gray-300">
+              {mode === 'signup' ? (
+                <a href={`/auth/signin${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ''}`} className="hover:underline">
+                  Already have an account? Sign in
+                </a>
+              ) : (
+                <a href={`/auth/signin?mode=signup${redirect ? `&redirect=${encodeURIComponent(redirect)}` : ''}`} className="hover:underline">
+                  Need an account? Sign up
+                </a>
+              )}
+            </div>
 
             {error && <p className="text-red-500 text-center mt-4">{error}</p>}
           </div>
