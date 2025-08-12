@@ -318,3 +318,39 @@ For support and questions:
 ---
 
 **Built for Zemenay Tech Solutions Blog Module Challenge** 🚀
+
+## Blog module CLI (scaffold only)
+
+This package includes a small CLI to scaffold the pages and middleware into a Next.js App Router project. It does not touch your database. Follow the Supabase setup instructions elsewhere in this README.
+
+Usage:
+
+```bash
+# Add to an existing Next.js app
+npm i zemenay-blog-module
+
+# Scaffold pages and middleware
+npx zemenay-blog-module scaffold \
+  --basePath=blog \
+  --adminPath=admin \
+  --authPath=auth/signin
+```
+
+Options:
+- `--srcDir=src|.`: where your `app/` lives (auto-detected)
+- `--basePath`: blog route base (default `blog`)
+- `--adminPath`: admin route base (default `admin`)
+- `--authPath`: sign-in page path (default `auth/signin`)
+- `--force`: overwrite existing files
+
+Generated files:
+- `app/<basePath>/[[...slug]]/page.tsx` (public blog)
+- `app/<adminPath>/page.tsx` (admin dashboard)
+- `app/<authPath>/page.tsx` (sign-in)
+- `middleware.ts` protecting `/<adminPath>`
+
+Env required:
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+Then continue with the Supabase schema and RLS steps below.
