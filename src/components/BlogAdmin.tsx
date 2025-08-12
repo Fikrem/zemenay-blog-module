@@ -106,7 +106,7 @@ function ImageUpload({
 
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+      <label className="block text-sm font-medium text-gray-700  mb-2">
         {label}
       </label>
       <div className="flex items-center gap-4">
@@ -415,7 +415,13 @@ function AdminSkeleton() {
 }
 
 // ===== MAIN BLOG ADMIN COMPONENT =====
-export function BlogAdmin() {
+export function BlogAdmin({
+  topOffset = 0,
+  showHeader = true,
+}: {
+  topOffset?: number | string;
+  showHeader?: boolean;
+} = {}) {
   // ===== STATE MANAGEMENT =====
   const [posts, setPosts] = useState<Post[]>([]);
   const [title, setTitle] = useState("");
@@ -608,7 +614,15 @@ export function BlogAdmin() {
 
   // ===== MAIN RENDER =====
   return (
-    <div className="min-h-screen bg-white">
+    <div
+      className="min-h-screen bg-white"
+      style={{
+        paddingTop:
+          typeof topOffset === "number"
+            ? `${topOffset}px`
+            : (topOffset as string),
+      }}
+    >
       <div className="container mx-auto p-4 max-w-7xl">
         {/* Toast Notifications */}
         {toast && (
@@ -620,35 +634,37 @@ export function BlogAdmin() {
         )}
 
         {/* HEADER SECTION */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-4xl font-bold text-gray-900">
-              Admin Dashboard
-            </h1>
-            <p className="mt-1 text-gray-600">Manage your blog posts</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={handleSignOut}
-              className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+        {showHeader && (
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h1 className="text-4xl font-bold text-gray-900">
+                Admin Dashboard
+              </h1>
+              <p className="mt-1 text-gray-600">Manage your blog posts</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleSignOut}
+                className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                />
-              </svg>
-              Sign Out
-            </button>
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  />
+                </svg>
+                Sign Out
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* MAIN CONTENT GRID */}
         <div className="grid grid-cols-1 xl:grid-cols-5 gap-8">

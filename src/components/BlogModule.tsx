@@ -143,7 +143,7 @@ function CommentSection({ postId, user }: { postId: string; user: any }) {
 
       {/* Comment Form */}
       {!user ? (
-        <div className="mb-8 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+        <div className="mb-8 p-4  border border-blue-200 dark:border-blue-800 rounded-lg">
           <p className="text-blue-800 dark:text-blue-200 text-sm">
             Please sign in to leave a comment.
           </p>
@@ -203,9 +203,9 @@ function CommentSection({ postId, user }: { postId: string; user: any }) {
         <div className="space-y-4">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="animate-pulse">
-              <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
-              <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
-              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+              <div className="h-4  rounded w-1/4 mb-2"></div>
+              <div className="h-4  rounded w-full mb-2"></div>
+              <div className="h-4  rounded w-3/4"></div>
             </div>
           ))}
         </div>
@@ -403,7 +403,15 @@ function BlogSkeleton() {
   );
 }
 
-export function BlogModule({ slug }: { slug?: string[] }) {
+export function BlogModule({
+  slug,
+  topOffset = 0,
+  showHeader = true,
+}: {
+  slug?: string[];
+  topOffset?: number | string;
+  showHeader?: boolean;
+}) {
   const [posts, setPosts] = useState<Post[]>([]);
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
@@ -465,16 +473,26 @@ export function BlogModule({ slug }: { slug?: string[] }) {
   if (slug && post) {
     const processedContent = convertVideoUrls(post.content);
     return (
-      <div className="min-h-screen bg-white dark:bg-gray-900">
+      <div
+        className="min-h-screen bg-white "
+        style={{
+          paddingTop:
+            typeof topOffset === "number"
+              ? `${topOffset}px`
+              : (topOffset as string),
+        }}
+      >
         <div className="container mx-auto p-4">
           <div className="max-w-4xl mx-auto">
             {/* Header with Auth */}
-            <div className="flex justify-between items-center mb-8">
-              <h1 className="text-4xl font-bold">welcome to the Blog</h1>
-              <div className="flex items-center gap-4">
-                <UserAuth onAuthChange={setUser} user={user} />
+            {showHeader && (
+              <div className="flex justify-between items-center mb-8">
+                <h1 className="text-4xl font-bold">welcome to the Blog</h1>
+                <div className="flex items-center gap-4">
+                  <UserAuth onAuthChange={setUser} user={user} />
+                </div>
               </div>
-            </div>
+            )}
             {post.cover_image_url && (
               <img
                 src={post.cover_image_url}
@@ -509,15 +527,25 @@ export function BlogModule({ slug }: { slug?: string[] }) {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div
+      className="min-h-screen bg-white"
+      style={{
+        paddingTop:
+          typeof topOffset === "number"
+            ? `${topOffset}px`
+            : (topOffset as string),
+      }}
+    >
       <div className="container mx-auto p-4">
         {/* Header with Auth */}
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold">welcome to the Blog</h1>
-          <div className="flex items-center gap-4">
-            <UserAuth onAuthChange={setUser} user={user} />
+        {showHeader && (
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-4xl font-bold">welcome to the Blog</h1>
+            <div className="flex items-center gap-4">
+              <UserAuth onAuthChange={setUser} user={user} />
+            </div>
           </div>
-        </div>
+        )}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {posts.map((post) => (
             <a

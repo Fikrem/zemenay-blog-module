@@ -96,6 +96,7 @@ CREATE TABLE posts (
   content TEXT NOT NULL,
   slug TEXT UNIQUE NOT NULL,
   author_name TEXT,
+  author_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   cover_image_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -138,6 +139,13 @@ ALTER TABLE user_reactions ENABLE ROW LEVEL SECURITY;
 
 -- Create RLS policies
 CREATE POLICY "Posts are viewable by everyone" ON posts FOR SELECT USING (true);
+-- Allow authenticated users to create posts, attributing to themselves
+CREATE POLICY "Users can insert posts" ON posts FOR INSERT WITH CHECK (auth.uid() = author_id);
+-- Allow authors to update their own posts
+CREATE POLICY "Users can update own posts" ON posts FOR UPDATE USING (auth.uid() = author_id);
+-- Allow authors to delete their own posts (optional)
+CREATE POLICY "Users can delete own posts" ON posts FOR DELETE USING (auth.uid() = author_id);
+
 CREATE POLICY "Comments are viewable by everyone" ON comments FOR SELECT USING (true);
 CREATE POLICY "Users can insert comments" ON comments FOR INSERT WITH CHECK (auth.role() = 'authenticated');
 CREATE POLICY "Users can update own comments" ON comments FOR UPDATE USING (auth.uid() = user_id);
@@ -154,6 +162,17 @@ CREATE POLICY "Users can delete own reactions" ON user_reactions FOR DELETE USIN
 ### 5. Storage Setup
 
 Create a storage bucket named `blog-images` in your Supabase dashboard with public access.
+
+Then apply the following storage policy to allow public read/write for this bucket (optional, for simplicity):
+
+```sql
+-- Allow anyone to do anything with objects in this bucket
+create policy "Public full access"
+on storage.objects
+for all
+using ( bucket_id = 'blog-images' )
+with check ( bucket_id = 'blog-images' );
+```
 
 ### 6. Run the Development Server
 
@@ -190,6 +209,25 @@ The blog module is designed to be easily integrated into existing Next.js applic
 2. Set up Supabase configuration
 3. Import and use the `BlogModule` component
 4. Customize styling and functionality as needed
+
+### Embedding in host apps with existing headers
+
+If your host app already has its own top navigation/header, you can either hide this module's internal header or add a top offset so content isn't overlapped.
+
+Examples:
+
+```tsx
+// Hide internal header, add 64px top padding
+<BlogModule showHeader={false} topOffset={64} />
+
+// Admin page with 4rem offset (Tailwind-like spacing) and header visible
+<BlogAdmin topOffset="4rem" showHeader />
+```
+
+Props:
+
+- `showHeader?: boolean` (default: true) — toggles the internal header
+- `topOffset?: number | string` (default: 0) — extra top padding to avoid host header overlap
 
 ## 📁 Project Structure
 
@@ -268,7 +306,6 @@ The application can be deployed to any platform that supports Next.js:
 ## 📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 
 ## 📞 Support
 
