@@ -16,4 +16,9 @@ export default defineConfig({
   splitting: false,
   minify: false,
   tsconfig: 'tsconfig.build.json',
+  external: ['react', 'react-dom', 'next', '@supabase/auth-helpers-nextjs', '@supabase/supabase-js'],
+  esbuildOptions(options) {
+    options.jsx = 'automatic';
+    options.jsxImportSource = 'react';
+  },
 });
