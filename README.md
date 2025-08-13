@@ -245,7 +245,8 @@ Examples:
 ```tsx
 // Hide internal header, add 64px top padding
 <BlogModule showHeader={true} topOffset={64} />
-
+```
+```tsx
 // Admin page with 4rem offset (Tailwind-like spacing) and header visible
 <BlogAdmin topOffset="4rem" showHeader />
 ```
