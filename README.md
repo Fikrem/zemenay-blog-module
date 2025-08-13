@@ -53,6 +53,9 @@ A modular, plug-and-play blog system built for Next.js applications. This soluti
 - Node.js 18+
 - npm, yarn, or pnpm
 - Supabase account
+## USAGE 
+I recommend you to watch the following explainer video to better understand our simple integration process 
+[![Watch the video]()](https://www.youtube.com/watch?v=bfAYZkfdPXo&ab_channel=FikreTesfa)
 
 
 ## Blog module CLI (scaffold only)
