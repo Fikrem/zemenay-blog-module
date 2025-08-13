@@ -55,7 +55,7 @@ A modular, plug-and-play blog system built for Next.js applications. This soluti
 - Supabase account
 ## USAGE 
 I recommend you to watch the following explainer video to better understand our simple integration process 
-[![Watch the video]()](https://www.youtube.com/watch?v=bfAYZkfdPXo&ab_channel=FikreTesfa)
+[![Watch the video](https://i9.ytimg.com/vi/bfAYZkfdPXo/mqdefault.jpg?v=689c736f&sqp=CODp8cQG&rs=AOn4CLB4yfEZaCWYvDDwpsDfmNSTifzbDg)](https://www.youtube.com/watch?v=bfAYZkfdPXo&ab_channel=FikreTesfa)
 
 
 ## Blog module CLI (scaffold only)
