@@ -1,5 +1,5 @@
 {
-  "name": "zemenay-blog-module",
+  "name": "zemenay-blog-kit",
   "version": "0.1.0",
   "type": "module",
   "private": false,
@@ -18,7 +18,7 @@
     "./package.json": "./package.json"
   },
   "bin": {
-    "zemenay-blog-module": "./dist/cli/index.js"
+    "zemenay-blog-kit": "./dist/cli/index.js"
   },
   "files": [
     "dist",

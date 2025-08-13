@@ -1,10 +1,7 @@
-# Zemenay Blog Module
+# Zemenay Blog kit
 
 A modular, plug-and-play blog system built for Next.js applications. This solution provides a complete blog system with admin panel, user authentication, and interactive features that can be easily integrated into any Next.js frontend.
 
-## 🎯 Challenge Solution
-
-This project addresses the challenge of building a modular blog solution that eliminates the time-consuming process of setting up backend infrastructure and admin panels. It provides a production-ready blog system that can be integrated in minutes.
 
 ## ✨ Features
 
@@ -57,24 +54,39 @@ This project addresses the challenge of building a modular blog solution that el
 - npm, yarn, or pnpm
 - Supabase account
 
-### 1. Clone the Repository
+
+## Blog module CLI (scaffold only)
+
+This package includes a small CLI to scaffold the pages and middleware into a Next.js App Router project. It does not touch your database. Follow the Supabase setup instructions elsewhere in this README.
+
+Usage:
 
 ```bash
-git clone <repository-url>
-cd zemenay-blog-module
+# Add to an existing Next.js app
+npm i zemenay-blog-kit
+
+# Scaffold pages and middleware
+npx zemenay-blog-kit scaffold \
+  --basePath=blog \
+  --adminPath=admin \
+  --authPath=auth/signin
 ```
 
-### 2. Install Dependencies
+Options:
+- `--srcDir=src|.`: where your `app/` lives (auto-detected)
+- `--basePath`: blog route base (default `blog`)
+- `--adminPath`: admin route base (default `admin`)
+- `--authPath`: sign-in page path (default `auth/signin`)
+- `--force`: overwrite existing files
 
-```bash
-npm install
-# or
-yarn install
-# or
-pnpm install
-```
+Generated files:
+- `app/<basePath>/[[...slug]]/page.tsx` (public blog)
+- `app/<adminPath>/page.tsx` (admin dashboard)
+- `app/<authPath>/page.tsx` (sign-in)
+- `middleware.ts` protecting `/<adminPath>`
+### supabase setup
 
-### 3. Environment Setup
+### 1. Environment Setup
 
 Create a `.env.local` file in the root directory:
 
@@ -84,7 +96,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 ```
 
-### 4. Database Setup
+### 2. Database Setup
 
 Run the following SQL in your Supabase SQL editor:
 
@@ -159,7 +171,7 @@ CREATE POLICY "Users can delete own reactions" ON user_reactions FOR DELETE USIN
 -- (See full SQL script in database_setup.sql for complete implementation)
 ```
 
-### 5. Storage Setup
+### 3. Storage Setup
 
 Create a storage bucket named `blog-images` in your Supabase dashboard with public access.
 
@@ -173,8 +185,23 @@ for all
 using ( bucket_id = 'blog-images' )
 with check ( bucket_id = 'blog-images' );
 ```
+### 4. admin user creation
 
-### 6. Run the Development Server
+For the creation of the admin user follow the following steps 
+Go to your Supabase project dashboard.
+
+In the left-hand menu, click on "Authentication".
+
+Under the "Authentication" section, select "Users".
+
+Click the "Invite" button to manually add a new user.
+
+Enter the user's email address and a temporary password.
+
+The user will receive an email to confirm their account. Once they confirm, they will be an active user.
+
+
+### 5. Run the Development Server
 
 ```bash
 npm run dev
@@ -184,19 +211,18 @@ yarn dev
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to view the blog.
+Open [http://localhost:3000/blog](http://localhost:3000/blog) to view the blog.
 
 ## 🚀 Usage
 
 ### Admin Access
 
 - Navigate to `/admin` to access the admin dashboard
-- Create an admin user through Supabase Auth
 - Manage blog posts, upload media, and view analytics
 
 ### Blog Features
 
-- **Homepage**: View all blog posts at `/`
+- **Homepage**: View all blog posts at `/blog`
 - **Individual Posts**: Access posts at `/blog/[slug]`
 - **User Authentication**: Sign up/sign in to like, dislike, and comment
 - **Interactive Features**: React to posts and engage with content
@@ -218,7 +244,7 @@ Examples:
 
 ```tsx
 // Hide internal header, add 64px top padding
-<BlogModule showHeader={false} topOffset={64} />
+<BlogModule showHeader={true} topOffset={64} />
 
 // Admin page with 4rem offset (Tailwind-like spacing) and header visible
 <BlogAdmin topOffset="4rem" showHeader />
@@ -256,19 +282,6 @@ src/
 - **Authentication**: Customize user roles and permissions
 - **Content Types**: Add support for different content formats
 
-### Environment Variables
-
-- `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase project URL
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Public Supabase API key
-- `SUPABASE_SERVICE_ROLE_KEY`: Private service role key (server-side)
-
-## 🚀 Deployment
-
-### Vercel (Recommended)
-
-1. Connect your GitHub repository to Vercel
-2. Add environment variables in Vercel dashboard
-3. Deploy automatically on push to main branch
 
 ### Other Platforms
 
@@ -317,40 +330,8 @@ For support and questions:
 
 ---
 
-**Built for Zemenay Tech Solutions Blog Module Challenge** 🚀
 
-## Blog module CLI (scaffold only)
 
-This package includes a small CLI to scaffold the pages and middleware into a Next.js App Router project. It does not touch your database. Follow the Supabase setup instructions elsewhere in this README.
 
-Usage:
 
-```bash
-# Add to an existing Next.js app
-npm i zemenay-blog-module
 
-# Scaffold pages and middleware
-npx zemenay-blog-module scaffold \
-  --basePath=blog \
-  --adminPath=admin \
-  --authPath=auth/signin
-```
-
-Options:
-- `--srcDir=src|.`: where your `app/` lives (auto-detected)
-- `--basePath`: blog route base (default `blog`)
-- `--adminPath`: admin route base (default `admin`)
-- `--authPath`: sign-in page path (default `auth/signin`)
-- `--force`: overwrite existing files
-
-Generated files:
-- `app/<basePath>/[[...slug]]/page.tsx` (public blog)
-- `app/<adminPath>/page.tsx` (admin dashboard)
-- `app/<authPath>/page.tsx` (sign-in)
-- `middleware.ts` protecting `/<adminPath>`
-
-Env required:
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-
-Then continue with the Supabase schema and RLS steps below.

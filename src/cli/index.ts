@@ -78,7 +78,7 @@ function writeFile(targetPath: string, content: string, force: boolean) {
 }
 
 function printHelp() {
-  console.log(`zemenay-blog-module CLI\n\nUsage:\n  npx zemenay-blog-module scaffold [--srcDir=src|.] [--basePath=blog] [--adminPath=admin] [--authPath=auth/signin] [--force]\n\nActions:\n  scaffold   Create blog, admin, auth/signin pages and admin middleware.\n\nExamples:\n  npx zemenay-blog-module scaffold\n  npx zemenay-blog-module scaffold --basePath=blog --adminPath=blog-admin\n`);
+  console.log(`zemenay-blog-kit CLI\n\nUsage:\n  npx zemenay-blog-kit scaffold [--srcDir=src|.] [--basePath=blog] [--adminPath=admin] [--authPath=auth/signin] [--force]\n\nActions:\n  scaffold   Create blog, admin, auth/signin pages and admin middleware.\n\nExamples:\n  npx zemenay-blog-kit  scaffold\n  npx zemenay-blog-kit scaffold --basePath=blog --adminPath=blog-admin\n`);
 }
 
 function scaffold(args: Args) {
@@ -86,7 +86,7 @@ function scaffold(args: Args) {
   const appRoot = path.join(cwd, args.srcDir === "." ? "" : args.srcDir, "app");
   ensureDir(appRoot);
 
-  const pkgName = "zemenay-blog-module";
+  const pkgName = "zemenay-blog-kit";
 
   // blog page
   const blogPagePath = path.join(appRoot, args.basePath, "[[...slug]]", "page.tsx");
